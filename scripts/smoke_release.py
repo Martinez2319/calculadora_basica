@@ -1,4 +1,5 @@
 import json, sys, time
+from http.client import HTTPException
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
 base = sys.argv[1].rstrip("/")
@@ -8,7 +9,7 @@ for attempt in range(30):
             assert response.status == 200
             assert json.load(response) == {"status": "ok"}
         break
-    except (URLError, AssertionError):
+    except (OSError, HTTPException, URLError, AssertionError):
         if attempt == 29:
             raise
         time.sleep(2)
