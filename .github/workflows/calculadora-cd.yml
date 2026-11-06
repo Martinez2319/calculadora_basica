@@ -1,0 +1,30 @@
+name: Calculadora CD con Docker
+on:
+  push:
+    branches: [resultado-aprendizaje-cd]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar entorno
+        run: pip install -r requirements-test.txt
+      - name: Pruebas unitarias y API
+        run: python -m pytest tests/ -v
+      - name: Construir y desplegar calculadora
+        run: python scripts/deploy.py "${{ github.sha }}"
+      - name: Evidencia del contenedor
+        if: always()
+        run: |
+          docker ps -a
+          docker logs "calculadora-${GITHUB_SHA:0:20}" || true
+      - name: Retirar entorno temporal
+        if: always()
+        run: docker rm -f "calculadora-${GITHUB_SHA:0:20}" || true
